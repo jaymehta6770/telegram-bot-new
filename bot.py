@@ -140,7 +140,7 @@ async def send_quality(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
             except:
                 pass
-
+# context.job_queue.run_once(delete_later, 600)
 # -------------------------
 # APP
 # -------------------------
