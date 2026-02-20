@@ -141,7 +141,6 @@ async def send_quality(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except:
                 pass
 
-        context.job_queue.run_once(delete_later, 600)
 # -------------------------
 # APP
 # -------------------------
@@ -154,6 +153,7 @@ application.add_handler(CallbackQueryHandler(send_quality))
 
 print("Bot running (Permanent DB version)...")
 application.run_polling() # 'app' ki jagah 'application'
+
 
 
 
