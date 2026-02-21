@@ -115,7 +115,7 @@ async def send_quality(update: Update, context: ContextTypes.DEFAULT_TYPE):
         cap = (
             f"✨ {series.upper()} - EP {ep}\n"
             f"🎬 Quality: {quality}\n"
-            f"💖 Powered by CHAMKAGI_BOT"
+            f"💖 Powered by @MAKIMA6N_BOT"
         )
 
         await query.message.reply_video(
