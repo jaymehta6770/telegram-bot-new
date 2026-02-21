@@ -115,21 +115,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
+
     if not args:
-        await update.message.reply_text("Welcome! Send series name in start link.")
+        await update.message.reply_text(
+            "Usage:\n"
+            "/start series_s01  → full season\n"
+            "/start series_s01_ep3 → single episode"
+        )
         return
 
     query = args[0].lower()
 
-    # 🔍 Check single episode request
-    ep_match = re.search(r"(.+)_ep(\d+)$", query)
+    # -------------------------
+    # SINGLE EPISODE MODE
+    # -------------------------
+    single_match = re.match(r"(.+)_ep(\d+)$", query)
 
-    # -------------------------
-    # 🎯 SINGLE EPISODE MODE
-    # -------------------------
-    if ep_match:
-        series = ep_match.group(1)
-        target_ep = ep_match.group(2)
+    if single_match:
+        series = single_match.group(1)
+        ep_req = single_match.group(2)
 
         qualities = EPISODES.get(series)
         if not qualities:
@@ -139,25 +143,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         sent = False
 
         for quality, eps in qualities.items():
-            if target_ep in eps:
+            if ep_req in eps:
                 cap = (
-                    f"✨ {series.upper()} - EP {target_ep}\n"
+                    f"✨ {series.upper()} - EP {ep_req}\n"
                     f"🎬 Quality: {quality}\n"
                     f"💖 Powered by @MAKIMA6N_BOT"
                 )
 
                 await update.message.reply_video(
-                    video=eps[target_ep],
+                    video=eps[ep_req],
                     caption=cap
                 )
                 sent = True
 
         if not sent:
             await update.message.reply_text("Episode not found.")
+
         return
 
     # -------------------------
-    # 📦 FULL SEASON MODE
+    # FULL SEASON MODE
     # -------------------------
     series = query
     qualities = EPISODES.get(series)
@@ -168,7 +173,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     buttons = []
     for q in qualities.keys():
-        buttons.append([InlineKeyboardButton(q, callback_data=f"{series}|{q}")])
+        buttons.append(
+            [InlineKeyboardButton(q, callback_data=f"{series}|{q}")]
+        )
 
     await update.message.reply_text(
         "Choose Quality:",
