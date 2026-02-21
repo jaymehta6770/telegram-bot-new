@@ -113,34 +113,67 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-# -------------------------
-# SEND EPISODES
-# -------------------------
-async def send_quality(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    series, quality = query.data.split("|")
-    files = EPISODES.get(series, {}).get(quality)
-
-    if not files:
-        await query.message.reply_text("Episodes not found.")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    args = context.args
+    if not args:
+        await update.message.reply_text("Welcome! Send series name in start link.")
         return
 
-    await query.message.reply_text(f"Sending {quality} episodes...")
+    query = args[0].lower()
 
-    # 🔥 LOOP — yahin se videos jayenge
-    for ep in sorted(files.keys(), key=lambda x: int(x)):
-        cap = (
-            f"✨ {series.upper()} - EP {ep}\n"
-            f"🎬 Quality: {quality}\n"
-            f"💖 Powered by @MAKIMA6N_BOT"
-        )
+    # 🔍 Check single episode request
+    ep_match = re.search(r"(.+)_ep(\d+)$", query)
 
-        await query.message.reply_video(
-            video=files[ep],
-            caption=cap
-        )
+    # -------------------------
+    # 🎯 SINGLE EPISODE MODE
+    # -------------------------
+    if ep_match:
+        series = ep_match.group(1)
+        target_ep = ep_match.group(2)
+
+        qualities = EPISODES.get(series)
+        if not qualities:
+            await update.message.reply_text("Series not found in database.")
+            return
+
+        sent = False
+
+        for quality, eps in qualities.items():
+            if target_ep in eps:
+                cap = (
+                    f"✨ {series.upper()} - EP {target_ep}\n"
+                    f"🎬 Quality: {quality}\n"
+                    f"💖 Powered by @MAKIMA6N_BOT"
+                )
+
+                await update.message.reply_video(
+                    video=eps[target_ep],
+                    caption=cap
+                )
+                sent = True
+
+        if not sent:
+            await update.message.reply_text("Episode not found.")
+        return
+
+    # -------------------------
+    # 📦 FULL SEASON MODE
+    # -------------------------
+    series = query
+    qualities = EPISODES.get(series)
+
+    if not qualities:
+        await update.message.reply_text("Series not found in database.")
+        return
+
+    buttons = []
+    for q in qualities.keys():
+        buttons.append([InlineKeyboardButton(q, callback_data=f"{series}|{q}")])
+
+    await update.message.reply_text(
+        "Choose Quality:",
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
 # -------------------------
 # APP INITIALIZATION
 # -------------------------
