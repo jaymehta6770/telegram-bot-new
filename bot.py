@@ -61,27 +61,33 @@ async def auto_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     caption = msg.caption.lower()
-    # Pattern: "AnimeName ep01 720p"
-    match = re.search(r"(\w+)\s+ep(\d+)\s+(\d+p)", caption)
-    if not match:
-        return
 
-    series, ep, quality = match.groups()
+# Pattern: name s01 ep01 720p
+match = re.search(
+    r"([\w_]+)\s*s(\d+)\s*ep(\d+)\s*(\d{3,4}p)",
+    caption
+)
 
-    file_id = None
-    if msg.video:
-        file_id = msg.video.file_id
-    elif msg.document:
-        file_id = msg.document.file_id
+if not match:
+    return
 
-    if not file_id:
-        return
+series, season, ep, quality = match.groups()
+series = f"{series}_s{season}"
 
-    EPISODES.setdefault(series, {}).setdefault(quality, {})
-    EPISODES[series][quality][ep] = file_id
+file_id = None
+if msg.video:
+    file_id = msg.video.file_id
+elif msg.document:
+    file_id = msg.document.file_id
 
-    save_db(EPISODES)
-    print(f"Saved: {series} EP{ep} {quality}")
+if not file_id:
+    return
+
+EPISODES.setdefault(series, {}).setdefault(quality, {})
+EPISODES[series][quality][ep] = file_id
+
+save_db(EPISODES)
+print(f"Saved: {series} EP{ep} {quality}")
 
 # -------------------------
 # START COMMAND
