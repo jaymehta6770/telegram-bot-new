@@ -168,7 +168,6 @@ if not qualities:
         "🎬 Choose Quality:",
         reply_markup=InlineKeyboardMarkup(buttons)
     )
-
 # =========================================================
 # 📤 SEND FULL SEASON
 # =========================================================
