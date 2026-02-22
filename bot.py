@@ -152,18 +152,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # =====================================================
     # 📺 FULL SEASON MODE
     # =====================================================
-    series = query
-    qualities = EPISODES.get(series)
+    async def handle_anime(update, context):
+        series = query  # આ બધી લાઈનો ૪ સ્પેસ અંદર હોવી જોઈએ
+        qualities = EPISODES.get(series)
 
-if not qualities:
+        if not qualities:
         await update.message.reply_text("❌ Series not found in database.")
         return
 
-buttons = [
-    [InlineKeyboardButton(q, callback_data=f"{series}|{q}")]
-    for q in qualities.keys()
-]
-await update.message.reply_text(
+    buttons = [
+        [InlineKeyboardButton(q, callback_data=f"{series}|{q}")]
+        for q in qualities.keys()
+    ]
+
+    await update.message.reply_text(
         "🎬 Choose Quality:",
         reply_markup=InlineKeyboardMarkup(buttons)
     )
