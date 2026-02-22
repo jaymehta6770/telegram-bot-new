@@ -1,4 +1,3 @@
-🔥 Itachi uchiha 🔥, [2/22/2026 4:15 PM]
 import re
 import json
 import os
@@ -156,7 +155,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     series = query
     qualities = EPISODES.get(series)
 
-🔥 Itachi uchiha 🔥, [2/22/2026 4:15 PM]
 if not qualities:
         await update.message.reply_text("❌ Series not found in database.")
         return
@@ -211,7 +209,7 @@ application.add_handler(MessageHandler(filters.ALL, auto_save))
 # =========================================================
 # ▶️ MAIN
 # =========================================================
-if name == "main":
+if __name__ == "__main__":
     print("Bot is starting on NEW SERVICE...")
     keep_alive()
     application.run_polling()
