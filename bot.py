@@ -99,15 +99,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # ================= WELCOME =================
     if not args:
-        await update.message.reply_text(
+       await update.message.reply_text(
             "✨ WELCOME TO MAKIMA ANIME BOT ✨\n\n"
-            "🎬 Fast Episode Delivery\n"
-            "⚡ Multi Quality Available\n"
-            "📦 Auto Updated Library\n\n"
-            "💖 Powered by @MAKIMA6N_BOT",
-            parse_mode="Markdown"
+            "🚀 Fast Episode Delivery\n"
+            "🎬 Multi Quality Available\n"
+            "📚 Auto Updated Library\n\n"
+            "🔍 Usage:\n"
+            "/start series_s01\n"
+            "/start series_s01_ep3\n\n"
+            "💖 Powered by @MAKIMA6N_BOT"
         )
-        return
 
     query = args[0].lower()
 
