@@ -132,7 +132,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
 
     if not args:
-    WELCOME_IMG = "https://wallpaperbat.com/img/76129657-download-makima-chainsaw-man-anime.jpg"
+        WELCOME_IMG = "https://wallpaperbat.com/img/76129657-download-makima-chainsaw-man-anime.jpg"
 
     buttons = [
         [InlineKeyboardButton("» JOIN CHANNEL «", url="https://t.me/AnimeHdZone")],
