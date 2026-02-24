@@ -67,13 +67,23 @@ def pretty_name(raw: str):
 # ================== UPLOAD HANDLER ===================
 # =====================================================
 async def save_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    message = update.message
+    message = update.message or update.channel_post
 
-    # 🔒 only owner upload
-    if OWNER_ID and message.from_user.id != OWNER_ID:
+    if not message:
         return
 
-    if not message.video:
+    # 🔒 only owner upload (safe)
+    if OWNER_ID and message.from_user:
+        if message.from_user.id != OWNER_ID:
+            return
+
+    # 🎬 get file id (video or document)
+    file_id = None
+    if message.video:
+        file_id = message.video.file_id
+    elif message.document and message.document.mime_type.startswith("video"):
+        file_id = message.document.file_id
+    else:
         return
 
     caption_text = message.caption
@@ -87,33 +97,33 @@ async def save_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         title = parts[0]
         key = title.lower().replace(" ", "")
 
-        # 🎬 MOVIE FORMAT
+        # 🎬 MOVIE
         if parts[1].upper() == "MOVIE":
             quality = parts[2]
-            file_id = message.video.file_id
 
             EPISODES.setdefault(key, {})
             EPISODES[key][quality] = file_id
 
-        # 📺 SERIES FORMAT
+            print(f"Saved Movie: {title} {quality}")
+
+        # 📺 SERIES
         else:
-            season = parts[1].upper()      # S01
-            episode = parts[2].upper()     # EP04
-            quality = parts[3]             # 720p
-            file_id = message.video.file_id
+            season = parts[1].upper()
+            episode = parts[2].upper()
+            quality = parts[3]
 
             EPISODES.setdefault(key, {})
             EPISODES[key].setdefault(season, {})
             EPISODES[key][season].setdefault(episode, {})
             EPISODES[key][season][episode][quality] = file_id
 
-        # 💾 SAVE
-        save_to_db(EPISODES)
+            print(f"Saved Series: {title} {season} {episode} {quality}")
 
-        await message.reply_text("✅ Saved in database!")
+        save_to_db(EPISODES)
+        print("✅ Mongo Updated")
 
     except Exception as e:
-        await message.reply_text(f"❌ Error: {e}")
+        print("❌ Save error:", e)
 
 # =====================================================
 # 🚀 START COMMAND
