@@ -130,72 +130,68 @@ async def save_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # =====================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
+    WELCOME_IMG = "https://wallpaperbat.com/img/76129657-download-makima-chainsaw-man-anime.jpg"
 
+    # Agar user ne sirf /start likha hai (bina link ke)
     if not args:
-        WELCOME_IMG = "https://wallpaperbat.com/img/76129657-download-makima-chainsaw-man-anime.jpg"
+        buttons = [
+            [InlineKeyboardButton("» JOIN CHANNEL «", url="https://t.me/AnimeHdZone")],
+            [InlineKeyboardButton("‼️ NOW CLICK HERE ‼️", url="https://t.me/MAKIMA6N_BOT")]
+        ]
+        await update.message.reply_photo(
+            photo=WELCOME_IMG,
+            caption=(
+                f"» HEY 🔥 {update.effective_user.first_name} 🔥 ×,\n\n"
+                "YOUR FILE IS READY ‼️ LOOKS LIKE YOU\n"
+                "HAVEN'T SUBSCRIBED TO OUR CHANNELS\n"
+                "YET, SUBSCRIBE NOW TO GET YOUR FILES."
+            ),
+            reply_markup=InlineKeyboardMarkup(buttons)
+        )
+        return  # Yahan function ruk jayega agar link nahi hai
 
-    buttons = [
-        [InlineKeyboardButton("» JOIN CHANNEL «", url="https://t.me/AnimeHdZone")],
-        [InlineKeyboardButton("‼️ NOW CLICK HERE ‼️", url="https://t.me/MAKIMA6N_BOT")]
-    ]
-
-    await update.message.reply_photo(
-        photo=WELCOME_IMG,
-        caption=(
-            f"» HEY 🔥 {update.effective_user.first_name} 🔥 ×,\n\n"
-            "YOUR FILE IS READY ‼️ LOOKS LIKE YOU\n"
-            "HAVEN'T SUBSCRIBED TO OUR CHANNELS\n"
-            "YET, SUBSCRIBE NOW TO GET YOUR FILES."
-        ),
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
-    return
-
+    # Agar user link ke saath aaya hai (e.g. /start naruto)
     query = args[0].lower()
-
-    # ========= SINGLE EP =========
-    # ========= SINGLE EP =========
+    
+    # Check for specific episode link: title_s01_ep01
     single = re.match(r"(.+)_s(\d+)_ep(\d+)", query)
 
     if single:
-        title, season, ep = single.groups()
-        season = f"S{season.zfill(2)}"
-        ep = f"EP{ep.zfill(2)}"
+        title, s_num, e_num = single.groups()
+        season_key = f"S{s_num.zfill(2)}"
+        ep_key = f"EP{e_num.zfill(2)}"
 
         data = EPISODES.get(title)
         if not data:
             await update.message.reply_text("❌ Series not found.")
             return
 
-        files = data.get(season, {}).get(ep)
+        files = data.get(season_key, {}).get(ep_key)
         if not files:
-            await update.message.reply_text("❌ Episode not found.")
+            await update.message.reply_text(f"❌ {ep_key} not found.")
             return
 
         for quality, file_id in files.items():
-            cap = (
-                f"✨ {pretty_name(title)} [{season}][{ep}]\n"
-                f"🎬 Quality: {quality}\n"
-                f"💖 Powered by @MAKIMA6N_BOT"
-            )
+            cap = f"✨ {pretty_name(title)} [{season_key}][{ep_key}]\n🎬 Quality: {quality}\n💖 Powered by @MAKIMA6N_BOT"
             await update.message.reply_video(video=file_id, caption=cap)
-            return
-
-    # ========= SEASON BUTTON =========
-    data = EPISODES.get(query)
-    if not data:
-        await update.message.reply_text("❌ Series not found.")
         return
 
-    buttons = [
-        [InlineKeyboardButton(season, callback_data=f"{query}|{season}")]
-        for season in data.keys()
-    ]
+    # Normal Series link ke liye (Seasons dikhane ke liye)
+    data = EPISODES.get(query)
+    if not data:
+        await update.message.reply_text("❌ Title not found.")
+        return
 
-    await update.message.reply_text(
-        "🎬 Choose Season:",
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
+    # Check agar ye Series hai ya Movie
+    seasons = [s for s in data.keys() if s.startswith('S')]
+    
+    if seasons:
+        buttons = [[InlineKeyboardButton(s, callback_data=f"{query}|{s}")] for s in sorted(seasons)]
+        await update.message.reply_text("🎬 Choose Season:", reply_markup=InlineKeyboardMarkup(buttons))
+    else:
+        # Movie/Direct file case
+        for quality, file_id in data.items():
+            await update.message.reply_video(video=file_id, caption=f"🎬 {pretty_name(query)}\nQuality: {quality}")
 
 # =====================================================
 # 📤 SEND SEASON
