@@ -86,7 +86,7 @@ async def save_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         return
 
-    caption_text = message.caption
+    caption_text = message.caption or ""
     if not caption_text:
         await message.reply_text("❌ Caption required!")
         return
@@ -143,6 +143,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = args[0].lower()
 
     # ========= SINGLE EP =========
+    # ========= SINGLE EP =========
     single = re.match(r"(.+)_s(\d+)_ep(\d+)", query)
 
     if single:
@@ -154,7 +155,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not data:
             await update.message.reply_text("❌ Series not found.")
             return
-            files = data.get(season, {}).get(ep)
+
+        files = data.get(season, {}).get(ep)
         if not files:
             await update.message.reply_text("❌ Episode not found.")
             return
@@ -166,7 +168,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"💖 Powered by @MAKIMA6N_BOT"
             )
             await update.message.reply_video(video=file_id, caption=cap)
-        return
+            return
 
     # ========= SEASON BUTTON =========
     data = EPISODES.get(query)
