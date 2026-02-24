@@ -132,13 +132,24 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
 
     if not args:
-        await update.message.reply_text(
-            "✨ WELCOME TO MAKIMA ANIME BOT ✨\n\n"
-            "Usage:\n"
-            "/start angelnextdoor\n"
-            "/start angelnextdoor_s01_ep04"
-        )
-        return
+    WELCOME_IMG = "https://wallpaperbat.com/img/76129567-download-makima-chainsaw-man-anime.jpg"
+
+    buttons = [
+        [InlineKeyboardButton("» JOIN CHANNEL «", url="https://t.me/Animehdzone")],
+        [InlineKeyboardButton("‼️ NOW CLICK HERE ‼️", url="https://t.me/@MAKIMA6N_BOT")]
+    ]
+
+    await update.message.reply_photo(
+        photo=WELCOME_IMG,
+        caption=(
+            f"» HEY 🔥 {update.effective_user.first_name} 🔥 ×,\n\n"
+            "YOUR FILE IS READY ❗️❗️ LOOKS LIKE YOU\n"
+            "HAVEN'T SUBSCRIBED TO OUR CHANNELS\n"
+            "YET, SUBSCRIBE NOW TO GET YOUR FILES."
+        ),
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+    return
 
     query = args[0].lower()
 
@@ -163,7 +174,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         for quality, file_id in files.items():
             cap = (
-                f"✨ {pretty_name(title)} {season} - {ep}\n"
+                f"✨ {pretty_name(title)} [{season}][{ep}]\n"
                 f"🎬 Quality: {quality}\n"
                 f"💖 Powered by @MAKIMA6N_BOT"
             )
