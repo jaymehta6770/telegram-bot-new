@@ -13,12 +13,15 @@ from flask import Flask
 from threading import Thread
 from pymongo import MongoClient
 
-def clean_key(name: str):
-    return re.sub(r'[^a-z0-9]+', '_', name.lower()).strip('_')
-
-def pretty_name(name: str):
-    return name.replace('_', ' ').title()
-    
+def clean_key(title: str) -> str:
+    return (
+        title.lower()
+        .replace("&", "and")
+        .replace("-", " ")
+        .strip()
+        .replace("  ", " ")
+        .replace(" ", "_")
+    )
 # =====================================================
 # 🌐 KEEP ALIVE (Render)
 # =====================================================
