@@ -222,10 +222,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # 📺 FULL SEASON ONE QUALITY
 # example: title_s01_720p
 # =====================================================
-try:
-    season_quality = re.match(r"(.+)_S(\d+)_(\d+p)", query)
-except Exception as e:
-    print(e)
+season_quality = re.match(r"(.+)_S(\d+)_(\d+p)", query)
 
 if season_quality:
     title, s_num, quality = season_quality.groups()
