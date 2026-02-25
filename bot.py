@@ -145,27 +145,24 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         WELCOME_IMG = "https://wallpaperaccess.com/full/15144075.jpg"
 
-        # ================== 🔹 NORMAL START ==================
-        if not args:
-            buttons = [
-                [InlineKeyboardButton("» JOIN CHANNEL «", url="https://t.me/AnimeHdZone")],
-                [InlineKeyboardButton("‼️ NOW CLICK HERE ‼️", url="https://t.me/MAKIMA6N_BOT")]
-            ]
+if not args:
+    buttons = [
+        [InlineKeyboardButton("» JOIN CHANNEL «", url="https://t.me/AnimeHdZone")],
+        [InlineKeyboardButton("‼️ NOW CLICK HERE ‼️", url="https://t.me/MAKIMA6N_BOT")]
+    ]
 
-            await msg.reply_photo(
-                photo=WELCOME_IMG,
-                caption=f"» HEY 🔥 {update.effective_user.first_name} 🔥 ×,\n\nSUBSCRIBE NOW TO GET YOUR FILES.",
-                reply_markup=InlineKeyboardMarkup(buttons)
-            )
-            return
+    await msg.reply_photo(
+        photo=WELCOME_IMG,
+        caption=f"» HEY 🔥 {update.effective_user.first_name} 🔥 «,\n\nSUBSCRIBE NOW TO GET YOUR FILES.",
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+    return
 
-        # reload db if empty
-        if not EPISODES:
-            EPISODES = load_db()
+# reload db if empty
+if not EPISODES:
+    EPISODES = load_db()
 
-        query = args[0].lower()
-        except Exception as e:
-            print("Start error:", e)
+query = args[0].lower()
 
         # =====================================================
         # 🎯 DIRECT QUALITY LINK
