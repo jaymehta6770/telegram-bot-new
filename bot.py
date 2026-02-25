@@ -132,16 +132,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global EPISODES
 
     try:
-        msg = update.effective_message
-        user = update.effective_user
         args = context.args
+        msg = update.message
 
-        # ✅ Working image (safe)
         WELCOME_IMG = "https://wallpaperaccess.com/full/15144075.jpg"
 
-        # =====================================================
-        # 🔹 SIMPLE /start (NO LINK)
-        # =====================================================
+        # ================== 🔹 NORMAL START ==================
         if not args:
             buttons = [
                 [InlineKeyboardButton("» JOIN CHANNEL «", url="https://t.me/AnimeHdZone")],
@@ -150,73 +146,75 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await msg.reply_photo(
                 photo=WELCOME_IMG,
-                caption=f"» HEY 🔥 {user.first_name} 🔥 ×,\n\nSUBSCRIBE NOW TO GET YOUR FILES.",
+                caption=f"» HEY 🔥 {update.effective_user.first_name} 🔥 ×,\n\nSUBSCRIBE NOW TO GET YOUR FILES.",
                 reply_markup=InlineKeyboardMarkup(buttons)
             )
             return
 
-        # =====================================================
-        # 🔹 USER WITH LINK
-        # =====================================================
-        query = args[0].lower()
-
-        # reload DB if empty
+        # reload db if empty
         if not EPISODES:
             EPISODES = load_db()
 
-       # ================= SINGLE EP / DIRECT QUALITY =================
+        query = args[0].lower()
 
-direct_q = re.match(r"(.+)_s(\d+)_ep(\d+)_(\d+p)", query)
-
-if direct_q:
-    title, s_num, e_num, quality = direct_q.groups()
-    s_key = f"S{s_num.zfill(2)}"
-    e_key = f"EP{e_num.zfill(2)}"
-
-    file_id = EPISODES.get(title, {}).get(s_key, {}).get(e_key, {}).get(quality)
-
-    if not file_id:
-        await msg.reply_text("❌ File not found.")
-        return
-
-    cap = (
-        f"✨ {pretty_name(title)} [{s_key}][{e_key}]\n"
-        f"🎬 Quality: {quality}\n"
-        f"💖 Powered by @MAKIMA6N_BOT"
-    )
-
-    await msg.reply_video(video=file_id, caption=cap)
-    return
-
-
-single = re.match(r"(.+)_s(\d+)_ep(\d+)", query)
-
-if single:
-    title, s_num, e_num = single.groups()
-    s_key = f"S{s_num.zfill(2)}"
-    e_key = f"EP{e_num.zfill(2)}"
-
-    ep_data = EPISODES.get(title, {}).get(s_key, {}).get(e_key)
-
-    if not ep_data:
-        await msg.reply_text("❌ Episode not found.")
-        return
-
-    buttons = [
-        [InlineKeyboardButton(q, callback_data=f"QUAL|{title}|{s_key}|{e_key}|{q}")]
-        for q in ep_data.keys()
-    ]
-
-    await msg.reply_text(
-        f"🎬 {pretty_name(title)} [{s_key}][{e_key}]\n\nChoose Quality:",
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
-    return
         # =====================================================
-        # 🔹 TITLE SEARCH (SEASONS)
+        # 🎯 DIRECT QUALITY LINK
+        # example: title_s01_ep01_720p
+        # =====================================================
+        direct_q = re.match(r"(.+)_s(\d+)_ep(\d+)_(\d+p)", query)
+        if direct_q:
+            title, s_num, e_num, quality = direct_q.groups()
+
+            s_key = f"S{s_num.zfill(2)}"
+            e_key = f"EP{e_num.zfill(2)}"
+
+            series = EPISODES.get(title)
+            if series:
+                file_id = (
+                    series
+                    .get(s_key, {})
+                    .get(e_key, {})
+                    .get(quality)
+                )
+
+                if file_id:
+                    cap = (
+                        f"✨ {pretty_name(title)} [{s_key}][{e_key}]\n"
+                        f"🎬 Quality: {quality}\n"
+                        f"💖 Powered by @MAKIMA6N_BOT"
+                    )
+                    await msg.reply_video(video=file_id, caption=cap)
+                    return
+
+        # =====================================================
+        # 🎬 SINGLE EPISODE → SHOW ALL QUALITIES
+        # example: title_s01_ep01
+        # =====================================================
+        single = re.match(r"(.+)_s(\d+)_ep(\d+)", query)
+        if single:
+            title, s_num, e_num = single.groups()
+
+            s_key = f"S{s_num.zfill(2)}"
+            e_key = f"EP{e_num.zfill(2)}"
+
+            series = EPISODES.get(title)
+            if series:
+                files = series.get(s_key, {}).get(e_key)
+
+                if files:
+                    for quality, file_id in files.items():
+                        cap = (
+                            f"✨ {pretty_name(title)} [{s_key}][{e_key}]\n"
+                            f"🎬 Quality: {quality}\n"
+                            f"💖 Powered by @MAKIMA6N_BOT"
+                        )
+                        await msg.reply_video(video=file_id, caption=cap)
+                    return
+
+        # =====================================================
+        # 📺 TITLE SEARCH → SHOW SEASONS
         # =====================================================
         data = EPISODES.get(query)
-
         if not data:
             await msg.reply_text("❌ File not found in Database!")
             return
@@ -233,17 +231,22 @@ if single:
                 "🎬 Choose Season:",
                 reply_markup=InlineKeyboardMarkup(buttons)
             )
-        else:
-            # movie case
-            for quality, file_id in data.items():
-                await msg.reply_video(
-                    video=file_id,
-                    caption=f"🎬 {pretty_name(query)}\n🎬 Quality: {quality}"
-                )
+            return
+
+        # =====================================================
+        # 🎥 MOVIE CASE
+        # =====================================================
+        for quality, file_id in data.items():
+            cap = (
+                f"🎬 {pretty_name(query)}\n"
+                f"🎬 Quality: {quality}\n"
+                f"💖 Powered by @MAKIMA6N_BOT"
+            )
+            await msg.reply_video(video=file_id, caption=cap)
 
     except Exception as e:
         print(f"CRITICAL ERROR: {e}")
-        await update.effective_message.reply_text("⚠️ Something went wrong!")
+        await update.message.reply_text("⚠️ Something went wrong!")
 
 # =====================================================
 # 📤 SEND SEASON
