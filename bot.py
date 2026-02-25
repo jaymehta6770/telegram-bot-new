@@ -164,31 +164,54 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not EPISODES:
             EPISODES = load_db()
 
-        # =====================================================
-        # 🔹 SINGLE EPISODE
-        # =====================================================
-        single = re.match(r"(.+)_s(\d+)_ep(\d+)", query)
+       # ================= SINGLE EP / DIRECT QUALITY =================
 
-        if single:
-            title, s_num, e_num = single.groups()
-            s_key = f"S{s_num.zfill(2)}"
-            e_key = f"EP{e_num.zfill(2)}"
+direct_q = re.match(r"(.+)_s(\d+)_ep(\d+)_(\d+p)", query)
 
-            series = EPISODES.get(title)
+if direct_q:
+    title, s_num, e_num, quality = direct_q.groups()
+    s_key = f"S{s_num.zfill(2)}"
+    e_key = f"EP{e_num.zfill(2)}"
 
-            if series:
-                files = series.get(s_key, {}).get(e_key)
+    file_id = EPISODES.get(title, {}).get(s_key, {}).get(e_key, {}).get(quality)
 
-                if files:
-                    for quality, file_id in files.items():
-                        cap = (
-                            f"✨ {pretty_name(title)} [{s_key}][{e_key}]\n"
-                            f"🎬 Quality: {quality}\n"
-                            f"💖 Powered by @MAKIMA6N_BOT"
-                        )
-                        await msg.reply_video(video=file_id, caption=cap)
-                    return
+    if not file_id:
+        await msg.reply_text("❌ File not found.")
+        return
 
+    cap = (
+        f"✨ {pretty_name(title)} [{s_key}][{e_key}]\n"
+        f"🎬 Quality: {quality}\n"
+        f"💖 Powered by @MAKIMA6N_BOT"
+    )
+
+    await msg.reply_video(video=file_id, caption=cap)
+    return
+
+
+single = re.match(r"(.+)_s(\d+)_ep(\d+)", query)
+
+if single:
+    title, s_num, e_num = single.groups()
+    s_key = f"S{s_num.zfill(2)}"
+    e_key = f"EP{e_num.zfill(2)}"
+
+    ep_data = EPISODES.get(title, {}).get(s_key, {}).get(e_key)
+
+    if not ep_data:
+        await msg.reply_text("❌ Episode not found.")
+        return
+
+    buttons = [
+        [InlineKeyboardButton(q, callback_data=f"QUAL|{title}|{s_key}|{e_key}|{q}")]
+        for q in ep_data.keys()
+    ]
+
+    await msg.reply_text(
+        f"🎬 {pretty_name(title)} [{s_key}][{e_key}]\n\nChoose Quality:",
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+    return
         # =====================================================
         # 🔹 TITLE SEARCH (SEASONS)
         # =====================================================
@@ -251,7 +274,8 @@ async def send_quality(update: Update, context: ContextTypes.DEFAULT_TYPE):
 application = ApplicationBuilder().token(BOT_TOKEN).build()
 
 application.add_handler(CommandHandler("start", start))
-application.add_handler(CallbackQueryHandler(send_quality))
+application.add_handler(CallbackQueryHandler(send_quality))  # season wala
+application.add_handler(CallbackQueryHandler(send_quality_file, pattern="^QUAL"))  # ✅ NEW ADD
 application.add_handler(MessageHandler(filters.ALL, save_video))
 # =====================================================
 # ▶️ MAIN
