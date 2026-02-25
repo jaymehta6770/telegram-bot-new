@@ -129,63 +129,98 @@ async def save_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # 🚀 START COMMAND
 # =====================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Try block isliye taaki error aaye toh bot crash na ho
-    try:
-        args = context.args
-        WELCOME_IMG = "https://wallpaperbat.com/img/76129657-download-makima-chainsaw-man-anime.jpg"
+    global EPISODES
 
-        # Case 1: Agar sirf /start likha hai
+    try:
+        msg = update.effective_message
+        user = update.effective_user
+        args = context.args
+
+        # ✅ Working image (safe)
+        WELCOME_IMG = "https://wallpaperaccess.com/full/15144075.jpg"
+
+        # =====================================================
+        # 🔹 SIMPLE /start (NO LINK)
+        # =====================================================
         if not args:
             buttons = [
                 [InlineKeyboardButton("» JOIN CHANNEL «", url="https://t.me/AnimeHdZone")],
                 [InlineKeyboardButton("‼️ NOW CLICK HERE ‼️", url="https://t.me/MAKIMA6N_BOT")]
             ]
-            await update.message.reply_photo(
+
+            await msg.reply_photo(
                 photo=WELCOME_IMG,
-                caption=f"» HEY 🔥 {update.effective_user.first_name} 🔥 ×,\n\nSUBSCRIBE NOW TO GET YOUR FILES.",
+                caption=f"» HEY 🔥 {user.first_name} 🔥 ×,\n\nSUBSCRIBE NOW TO GET YOUR FILES.",
                 reply_markup=InlineKeyboardMarkup(buttons)
             )
             return
 
-        # Case 2: Agar link ke saath aaya hai
+        # =====================================================
+        # 🔹 USER WITH LINK
+        # =====================================================
         query = args[0].lower()
-        
-        # Database se data uthana
+
+        # reload DB if empty
+        if not EPISODES:
+            EPISODES = load_db()
+
+        # =====================================================
+        # 🔹 SINGLE EPISODE
+        # =====================================================
+        single = re.match(r"(.+)_s(\d+)_ep(\d+)", query)
+
+        if single:
+            title, s_num, e_num = single.groups()
+            s_key = f"S{s_num.zfill(2)}"
+            e_key = f"EP{e_num.zfill(2)}"
+
+            series = EPISODES.get(title)
+
+            if series:
+                files = series.get(s_key, {}).get(e_key)
+
+                if files:
+                    for quality, file_id in files.items():
+                        cap = (
+                            f"✨ {pretty_name(title)} [{s_key}][{e_key}]\n"
+                            f"🎬 Quality: {quality}\n"
+                            f"💖 Powered by @MAKIMA6N_BOT"
+                        )
+                        await msg.reply_video(video=file_id, caption=cap)
+                    return
+
+        # =====================================================
+        # 🔹 TITLE SEARCH (SEASONS)
+        # =====================================================
         data = EPISODES.get(query)
-        
+
         if not data:
-            # Agar direct query nahi mili, toh regex check karein (Title_S01_EP01)
-            single = re.match(r"(.+)_s(\d+)_ep(\d+)", query)
-            if single:
-                title, s_num, e_num = single.groups()
-                season_key = f"S{s_num.zfill(2)}"
-                ep_key = f"EP{e_num.zfill(2)}"
-                
-                series_data = EPISODES.get(title)
-                if series_data:
-                    files = series_data.get(season_key, {}).get(ep_key)
-                    if files:
-                        for qual, f_id in files.items():
-                            await update.message.reply_video(video=f_id, caption=f"✨ {title} {season_key} {ep_key}")
-                        return
-            
-            await update.message.reply_text("❌ File Not Found in Database!")
+            await msg.reply_text("❌ File not found in Database!")
             return
 
-        # Case 3: Season buttons dikhana
-        seasons = [s for s in data.keys() if s.startswith('S')]
+        seasons = [s for s in data.keys() if s.startswith("S")]
+
         if seasons:
-            buttons = [[InlineKeyboardButton(s, callback_data=f"{query}|{s}")] for s in sorted(seasons)]
-            await update.message.reply_text("🎬 Choose Season:", reply_markup=InlineKeyboardMarkup(buttons))
+            buttons = [
+                [InlineKeyboardButton(s, callback_data=f"{query}|{s}")]
+                for s in sorted(seasons)
+            ]
+
+            await msg.reply_text(
+                "🎬 Choose Season:",
+                reply_markup=InlineKeyboardMarkup(buttons)
+            )
         else:
-            # Movie/Direct file
+            # movie case
             for quality, file_id in data.items():
-                await update.message.reply_video(video=file_id, caption=f"🎬 {query}")
+                await msg.reply_video(
+                    video=file_id,
+                    caption=f"🎬 {pretty_name(query)}\n🎬 Quality: {quality}"
+                )
 
     except Exception as e:
-        print(f"Error in start: {e}")
-        await update.message.reply_text("⚠️ Something went wrong!")
-
+        print(f"CRITICAL ERROR: {e}")
+        await update.effective_message.reply_text("⚠️ Something went wrong!")
 
 # =====================================================
 # 📤 SEND SEASON
